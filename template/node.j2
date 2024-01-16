@@ -1,0 +1,9 @@
+---
+{% for item in fvIp %}
+endpoint_ip: {{ endpoint_ip }}
+node_id: {{ item.fvIp.attributes.fabricPathDn.split('/')[2].split('-')[1] }}
+dn: {{ item.fvIp.attributes.dn }}
+vrfDn: {{ item.fvIp.attributes.vrfDn }}
+bdDn: {{ item.fvIp.attributes.bdDn }}
+fabricPathDn: {{ item.fvIp.attributes.fabricPathDn }}
+{% endfor %}

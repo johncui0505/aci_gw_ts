@@ -1,0 +1,83 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  # vars_prompt:
+  #   - name: endpoint_ip
+  #     prompt: "Enter Endpoint IP Address (a.b.c.d)"
+  #     private: no
+
+  vars:
+    endpoint_ip: 192.168.22.22    # Test IP
+
+  tasks:    
+    - name: APIC - 1. Retrive path for Node
+      raw: moquery -c fvIp -f 'fv.Ip.addr=="{{ endpoint_ip }}"' -o json 
+      register: moquery_out
+      delegate_to: apic1
+
+    - name: convert text to json
+      set_fact:
+        fvIp: "{{ moquery_out.stdout | from_json | json_query('imdata') }}"
+
+    - name: Export
+      template: 
+        src: template/node.j2
+        dest: common_vars.yml
+      delegate_to: localhost
+        
+# Leaf Playbook    
+- hosts: "leaf-{{ node_id }}"
+  vars_files: 
+    - common_vars.yml
+  gather_facts: no
+
+  tasks:
+    - name: Leaf {{ node_id }} - 1. Show endpoint
+      raw: show endpoint ip {{ endpoint_ip }} detail
+      register: output
+
+    - name: Leaf {{ node_id }} - 2. output of Show Endpoint
+      debug: 
+        msg: "{{ output | json_query('{stdout: stdout_lines}') }}"
+      when: output.stdout != ""
+
+    - set_fact:
+        vlan: "{{ output.stdout_lines | regex_search('\\d+') }}"
+      when: output.stdout_lines
+
+    - name: Leaf {{ node_id }} - 3. Gather VLAN ID
+      debug:
+        msg: "VLAN ID is {{ vlan }}"
+      when: output.stdout_lines 
+    - name: "Leaf {{ node_id }} - 4. Gather BD PI VLAN" 
+      raw: "show system internal epm vlan {{ vlan }}"
+      register: epm_output
+    - name: "Leaf {{ node_id }} - 5. Show Output" 
+      debug:
+        msg: "{{ epm_output.stdout_lines }}"
+      when: epm_output.stdout_lines 
+    - name: "Leaf {{ node_id }} - 6. Get Output list"
+      set_fact:
+        output_list: "{{ epm_output.stdout_lines | regex_findall('\\b\\d+\\b')  }}"    
+      when: epm_output.stdout_lines 
+    - name: "Leaf {{ node_id }} - 7. Get BD PI VLAN"
+      set_fact:
+        bd_vlan_id: "{{ output_list[-2] }}"
+      when: epm_output.stdout_lines 
+    - name: 
+      debug:
+        msg: "BD VLAN is {{ bd_vlan_id }}"
+      when: epm_output.stdout_lines 
+    - name: "Leaf {{ node_id }} - 8. Encap/Ports" 
+      raw: show vlan id {{ vlan }},{{ bd_vlan_id }} extended
+      register: encap_port
+    - name: "Leaf {{ node_id }} - 9. Show output of Encap/Ports"
+      debug:
+        msg: "{{ encap_port.stdout_lines }}"
+    - name: "Leaf {{ node_id }} - 10. Gather Gateway"
+      raw: show ip interface vlan {{ bd_vlan_id }}
+      register: gateway
+    - name: "Leaf {{ node_id }} - 11. Show Gateway"
+      debug:
+        msg: "{{ gateway.stdout_lines  }}"

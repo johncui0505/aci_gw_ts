@@ -1,0 +1,7 @@
+---
+endpoint_ip: 192.168.22.22
+node_id: 1201
+dn: uni/tn-jiacui_ndo_tn/ap-AppDB/epg-DB/cep-00:50:56:90:01:CB/ip-[192.168.22.22]
+vrfDn: uni/tn-jiacui_ndo_tn/ctx-jiacui_ndo_vrf
+bdDn: uni/tn-jiacui_ndo_tn/BD-jiacui_DB_BD
+fabricPathDn: topology/pod-1/paths-1201/pathep-[Shared-vPC-ESX1-VMM_IPG]

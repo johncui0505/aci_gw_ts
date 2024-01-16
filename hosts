@@ -1,0 +1,23 @@
+[apic] 
+apic1 ansible_host=10.106.236.54
+; apic2 ansible_host=10.106.236.55
+; apic3 ansible_host=10.106.236.56
+
+[apic:vars]
+ansible_user=jiacui
+ansible_password=cisco!123
+
+[leaf]
+leaf-1101 ansible_host=10.106.236.32
+leaf-1102 ansible_host=10.106.236.33
+leaf-1201 ansible_host=10.106.236.24
+leaf-1202 ansible_host=10.106.236.25
+leaf-2012 ansible_host=10.106.236.30
+leaf-2013 ansible_host=10.106.236.31
+leaf-2101 ansible_host=10.106.236.34
+leaf-2201 ansible_host=10.106.236.26
+leaf-2202 ansible_host=10.106.236.27
+
+[leaf:vars]
+ansible_user=jiacui
+ansible_ssh_pass=cisco!123
